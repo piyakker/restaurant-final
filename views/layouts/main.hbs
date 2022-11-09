@@ -23,7 +23,11 @@
           alt="我的餐廳清單">
       我的餐廳清單
     </a>
-    <a href="/restaurants/new" class="btn btn-info">添加新的餐廳</a>
+    {{#if isAuthenticated}}
+    <a href="/users/logout" class="btn btn-warning">我要登出</a>
+    {{else}}
+    <a href="/users/login" class="btn btn-info">我要登入</a>
+    {{/if}}
   </div>
   </nav>
 <div class="banner"></div>
