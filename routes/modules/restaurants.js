@@ -10,10 +10,11 @@ router.get('/new', (req, res) => {
 //查詢符合關鍵字的餐廳
 //透過取回的排序的屬性和值來 sort
 router.get('/search', (req, res) => {
+  const userId = req.user._id
   const keyword = req.query.keyword.trim()
   const sort = req.query.sort
   const regex = new RegExp(keyword, 'i')
-  Restaurant.find({ $or: [{ "name": { $regex: regex } }, { "category": { $regex: regex } }] })
+  Restaurant.find({ $or: [{ "name": { $regex: regex } }, { "category": { $regex: regex } }], userId })
     .lean()
     .sort(sort)
     .then(filteredRestaurants => res.render('index', { restaurants: filteredRestaurants, keyword }))
@@ -21,8 +22,9 @@ router.get('/search', (req, res) => {
 
 //瀏覽特定餐廳
 router.get('/:restaurant_id', (req, res) => {
-  const id = req.params.restaurant_id
-  return Restaurant.findById(id)
+  const userId = req.user._id
+  const _id = req.params.restaurant_id
+  return Restaurant.findOne({_id, userId})
     .lean()
     .then(restaurant => res.render('show', { restaurant }))
     .catch(error => console.log(error))
@@ -30,14 +32,18 @@ router.get('/:restaurant_id', (req, res) => {
 
 //新增餐廳
 router.post('/', (req, res) => {
-  return Restaurant.create(req.body)
+  const userId = req.user._id
+  const newRestaurant = req.body
+  newRestaurant.userId = userId
+  return Restaurant.create(newRestaurant)
     .then(() => { res.redirect('/') })
     .catch(error => console.log(error))
 })
 
 router.get('/:restaurant_id/edit', (req, res) => {
-  const id = req.params.restaurant_id
-  Restaurant.findById(id)
+  const userId = req.user._id
+  const _id = req.params.restaurant_id
+  Restaurant.findOne({_id, userId})
     .lean()
     .then(restaurant => res.render('edit', { restaurant }))
     .catch(error => console.log(error))
@@ -45,9 +51,10 @@ router.get('/:restaurant_id/edit', (req, res) => {
 
 //修改特定餐廳資料
 router.put('/:restaurant_id', (req, res) => {
+  const userId = req.user._id
   const { name, name_en, category, image, location, phone, google_map, rating, description } = req.body
-  const id = req.params.restaurant_id
-  return Restaurant.findById(id)
+  const _id = req.params.restaurant_id
+  return Restaurant.findOne({_id, userId})
     .then(restaurant => {
       restaurant.name = name
       restaurant.name_en = name_en
@@ -58,16 +65,17 @@ router.put('/:restaurant_id', (req, res) => {
       restaurant.google_map = google_map
       restaurant.rating = rating
       restaurant.description = description
-      restaurant.save()
+      return restaurant.save()
     })
-    .then(() => res.redirect(`/restaurants/${id}`))
+    .then(() => res.redirect(`/restaurants/${_id}`))
     .catch(error => console.log(error))
 })
 
 //刪除特定餐廳
 router.delete('/:restaurant_id', (req, res) => {
-  const id = req.params.restaurant_id
-  return Restaurant.findById(id)
+  const userId = req.user._id
+  const _id = req.params.restaurant_id
+  return Restaurant.findOne({_id, userId})
     .then(restaurant => restaurant.remove())
     .then(() => res.redirect('/'))
     .catch(error => console.log(error))
