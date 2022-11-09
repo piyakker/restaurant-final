@@ -2,6 +2,7 @@ const { initialize } = require('passport')
 const passport = require('passport')
 const User = require('../models/user')
 const LocalStrategy = require('passport-local').Strategy
+const bcrypt = require('bcryptjs')
 
 module.exports = app => {
   //初始化passport
@@ -18,11 +19,13 @@ module.exports = app => {
         return done(null, false, { message: 'That email is not registered!' })
       }
       //密碼錯誤
-      if (user.password !== password) {
-        req.flash('loginError', 'Email or Password incorrect!')
-        return done(null, false, { message: 'Email or Password incorrect!' })
-      }
-      return done(null, user)
+      return bcrypt.compare(password, user.password).then(isMatch => {
+        if (!isMatch) {
+          req.flash('loginError', 'Email or Password incorrect!')
+          return done(null, false, { message: 'Email or Password incorrect!' })
+        }
+        return done(null, user)
+      })
     })
     .catch(err => done(err, false)) 
   }))
