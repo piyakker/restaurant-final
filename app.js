@@ -9,13 +9,13 @@ const routes = require('./routes')
 require('./config/mongoose')
 
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 
 app.engine('hbs', exphbs({ defaultLayout: 'main', extname: 'hbs' }))
 app.set('view engine', 'hbs')
 
 app.use(session({
-  secret: 'SecretKey',
+  secret: process.env.SESSION_SECRET,
   resave: true,
   saveUninitialized: false
 }))
